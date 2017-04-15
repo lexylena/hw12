@@ -5,21 +5,20 @@
 #define DIR_NAME 48
 
 #include "slist.h"
-#include "pages.h"
+#include "inode.h"
 
 typedef struct dirent {
     char   name[48];
-    int    pnum;
-    pnode* node;
+    int inode_idx; // index in inodes array
 } dirent;
 
 typedef struct directory {
-    int     pnum;
-    dirent* ents;
-    pnode*  node;
+    dirent* entries; // array of everything in the directory
+    inode*  node; // pointer to the inode that is this directory
 } directory;
 
-void directory_init();
+void directory_init(); // create root directory from already created inode at index 2 (always)
+
 directory directory_from_pnum(int pnum);
 int directory_lookup_pnum(directory dd, const char* name);
 int tree_lookup_pnum(const char* path);

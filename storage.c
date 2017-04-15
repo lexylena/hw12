@@ -20,6 +20,7 @@ void
 storage_init(const char* path)
 {
     printf("TODO: Store file system data in: %s\n", path);
+    // should call inode_init, directory_init, superblock_init
 }
 
 static int

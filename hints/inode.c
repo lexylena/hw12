@@ -11,7 +11,7 @@
 #include <errno.h>
 #include <stdio.h>
 
-#include "pages.h"
+#include "inode.h"
 #include "slist.h"
 #include "util.h"
 
