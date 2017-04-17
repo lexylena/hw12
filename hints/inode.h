@@ -15,22 +15,15 @@ typedef struct inode {
     int links_count; // # of hard links pointing to this file
     int blocks_count; // # of data blocks allocated to this file
     enum Flags {FILE, DIRECTORY} flags;
-    void data_blocks[15]; // should this be a pointer...? or a datablock struct...?
+    void* data_blocks[15]; // 0-13 direct pointers to data blocks; 14 indirect pointer to directory
 } inode;
 
-
-void inodes_init();
+inode* inodes_init();
 void inodes_free();
 inode* get_inode(int inode_num);
 void update_inode(); // params TBD..
 void print_inode(int inode_num);
 
-// void   inodes_init(const char* path);
-// void   pages_free();
-// void*  pages_get_page(int pnum); // may delete?
-// inode* pages_get_node(int node_id); // may delete?
-// int    pages_find_empty();
-// void   print_node(inode* node);
 
 #endif
 

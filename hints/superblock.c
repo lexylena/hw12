@@ -4,13 +4,15 @@
 
 
 superblock*
-init_superblock()
+superblock_init(inode* inodes, void* data_blocks)
 {
-	superblock* superblock = malloc(sizeof(superblock));
-	superblock->root_idx = 2;
-	superblock->blocks_count = 256;
-	superblock->block_size = 512;
-	return superblock;
+	superblock* sb = malloc(sizeof(superblock));
+	sb->root_idx = 0;
+	sb->blocks_count = 256;
+	sb->block_size = 4096;
+	sb->inodes = inodes;
+	sb->data_blocks = data_blocks;
+	return sb;
 }
 
 int

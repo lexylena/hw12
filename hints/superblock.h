@@ -4,19 +4,15 @@
 #include <stdio.h>
 #include "inode.h"
 
-const int COUNT = 256;
 
 typedef struct superblock {
-	int root_idx; // = 2
+	int root_idx; // = 0
 	int blocks_count; // = 256; also applies to inodes and bitmaps
 	size_t block_size;
 	int inodes_bitmap[COUNT];
 	int blocks_bitmap[COUNT];
-	inode inodes[COUNT]; // location of first inode
-	void data_blocks[COUNT]; // location of first data block
-	/* TODO: how to init/allocate fixed size of blocks if void pointers? 
-			if datablock struct, it would just be like a wrapper...
-	*/
+	inode* inodes; // location of first inode
+	void* data_blocks; // location of first data block
 } superblock;
 
 /* TODO: 
@@ -33,7 +29,7 @@ typedef struct superblock {
 */
 
 // TODO: better way to not include superblock as param every time?
-superblock* init_superblock();
+superblock* superblock_init(inode* inodes, void* data_blocks);
 int get_free_inode(superblock* sb);
 int get_free_block(superblock* sb);
 int inode_is_free(superblock* sb, int inode_num); // may not be needed?
