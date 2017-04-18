@@ -2,6 +2,14 @@
 #include "directory.h"
 #include <stdio.h>
 
+directory* root;
+
+void directory_init() {
+    root = (directory*) malloc(sizeof(directory));
+    root->inode_idx = 2;
+
+}
+
 directory directory_from_pnum(int pnum) {
     //dont think we need this
 }
