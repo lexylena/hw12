@@ -52,7 +52,7 @@ slist* directory_list(const char* path) {
     //return the dirent* of the last directory
 }
 
-void print_directory(directory dd) {
+void print_directory(directory* dd) {
     //Print the node pointer
     //Iterate through the entries printing their info as it goes
 }

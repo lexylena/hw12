@@ -1,6 +1,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <libgen.h>
 
 #include "storage.h"
 #include "superblock.h"
@@ -8,6 +9,7 @@
 #include "inode.h"
 #include "datablock.h"
 #include "util.h"
+#include "slist.h"
 
 typedef struct file_data {
     const char* path;
@@ -51,9 +53,27 @@ storage_init(const char* path)
 dirent*
 find_dirent(const char* path)
 {
-    char* name;
-    
+    slist* lpath = s_split(path, "/");
+    inode* node = get_node(0);
+    directory* parent = node->datablocks[0];
+    dirent* cur = 0;
+    while(lpath != 0) {
+        cur = get_dirent(parent, lpath->data);
+	if(lpath->next != 0) {
+	    node = get_node(cur->inode_idx);
+	    parent = node->datablocks[0];
+            lpath = lpath->next;
+        } else {
+	    return cur;
+        }
+    }
+    return cur;
+}
     /*
+        copy path
+        dirname/basename
+        copy that
+ 
         store basename
         add dir names into array until dirname(path) returns '.'
         start at root inode
