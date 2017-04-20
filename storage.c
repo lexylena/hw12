@@ -3,6 +3,10 @@
 #include <string.h>
 
 #include "storage.h"
+#include "superblock.h"
+#include "directory.h"
+#include "inode.h"
+#include "datablock.h"
 #include "util.h"
 
 typedef struct file_data {
@@ -73,12 +77,12 @@ get_stat(const char* path, struct stat* st)
     memset(st, 0, sizeof(struct stat));
     st->st_uid  = getuid();
     st->st_mode = node->mode;
-    st->size = node->size;
+    st->st_size = node->size;
     st->st_nlink = node->links_count;
-    st->ino = entry->inode_idx;
-    st->st_atime = node->time;
-    st->st_ctime = node->ctime;
-    st->st_mtime = node->mtime;
+    st->st_ino = entry->inode_idx;
+    st->st_atime = node->time.tv_sec;
+    st->st_ctime = node->ctime.tv_sec;
+    st->st_mtime = node->mtime.tv_sec;
 
     return 0;
 }

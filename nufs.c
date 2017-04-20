@@ -250,7 +250,7 @@ struct fuse_operations nufs_ops;
 int
 main(int argc, char *argv[])
 {
-    assert(argc > 2 && argc < 5);
+    assert(argc > 2);
     storage_init(argv[--argc]);
     nufs_init_ops(&nufs_ops);
     return fuse_main(argc, argv, &nufs_ops, NULL);
