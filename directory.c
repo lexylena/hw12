@@ -7,8 +7,8 @@ directory* root;
 
 void directory_init() {
     root = (directory*) malloc(sizeof(directory));
+    root->entries = 0;
     root->node = get_inode(0);
-
 }
 
 directory directory_from_pnum(int pnum) {
@@ -55,4 +55,21 @@ slist* directory_list(const char* path) {
 void print_directory(directory dd) {
     //Print the node pointer
     //Iterate through the entries printing their info as it goes
+}
+
+dirent* get_dirent(directory dd, const char* name) {
+    dirent** p = &(dd->entries);
+    dirent* cur = dd->entries;
+    while(cur != 0) {
+	if(cur->name == name) {
+	    *p = cur->next;
+	    return cur;
+	} else if (cur->next != 0) {
+	    p = &(cur->next);
+	    cur = cur->next;
+	} else {
+	    return 0;
+	}
+    }
+    return 0;
 }
