@@ -57,7 +57,7 @@ void print_directory(directory dd) {
     //Iterate through the entries printing their info as it goes
 }
 
-dirent* get_dirent(directory dd, const char* name) {
+dirent* get_dirent(directory* dd, const char* name) {
     dirent* cur = dd->entries;
     while(cur != 0) {
 	if(cur->name == name) {
