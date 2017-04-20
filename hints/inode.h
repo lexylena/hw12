@@ -21,6 +21,8 @@ typedef struct inode {
 inode* inodes_init();
 void inodes_free();
 inode* get_inode(int inode_num);
+int chmod(int inode_num, mode_t mode);
+int update_timestamps(int inode_num, const struct timespec ts[2]);
 void print_inode(int inode_num);
 
 

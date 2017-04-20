@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <sys/time.h>
+#include <sys/stat.h>
 #include "superblock.h"
 #include "inode.h"
 #include "datablock.h"
@@ -13,8 +14,6 @@ superblock_init(inode* inodes, void* data_blocks)
 {
 	superblock* superblock = malloc(sizeof(superblock));
 	superblock->root_idx = 0;
-	// sb->blocks_count = 256;
-	// sb->block_size = 4096;
 	superblock->inodes = inodes;
 	superblock->data_blocks = data_blocks;
 	sb = superblock;
@@ -46,32 +45,6 @@ get_free_block()
 	}
 	return -1; // no free blocks
 }
-
-int
-inode_is_free(int inode_num) // may not be needed?
-{
-	return sb->inodes_bitmap[inode_num];
-}
-
-int
-block_is_free(int block_num) // may not be needed?
-{
-	return sb->blocks_bitmap[block_num];
-}
-
-// void
-// update_inodes_bitmap(int inode_num, int free)
-// {
-// 	sb->inodes_bitmap[inode_num] = free;
-// 	// print something if already set to free?
-// }
-
-// void
-// update_blocks_bitmap(int block_num, int free)
-// {
-// 	sb->blocks_bitmap[block_num] = free;
-// 	// print something if already set to free?
-// }
 
 void
 allocate_overflow_blocks(int inode_num, void* overflow)

@@ -7,8 +7,6 @@
 
 typedef struct superblock {
 	int root_idx; // = 0
-	// int blocks_count; // = 256; also applies to inodes and bitmaps
-	// size_t block_size;
 	uint8_t inodes_bitmap[256];
 	uint8_t blocks_bitmap[256];
 	inode* inodes; // location of first inode
@@ -19,10 +17,7 @@ typedef struct superblock {
 superblock* superblock_init(inode* inodes, void* data_blocks);
 int get_free_inode();
 int get_free_block();
-int inode_is_free(int inode_num); // may not be needed?
-int block_is_free(int block_num); // may not be needed?
-
-
+inode* make_inode(mode_t mode, char* data);
 
 
 #endif
