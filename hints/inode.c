@@ -28,7 +28,7 @@ inodes_init()
 void
 inodes_free()
 {
-    int rv = munmap(inodes_base, INODE_SIZE * BLOCK_COUNT);
+    int rv = munmap((void*)inodes_base, INODE_SIZE * BLOCK_COUNT);
     assert(rv == 0);
 }
 
@@ -36,12 +36,6 @@ inode*
 get_inode(int inode_num)
 {
     return inodes_base + INODE_SIZE * inode_num;
-}
-
-void
-update_inode(int inode_num, ...)
-{
-
 }
 
 void

@@ -47,36 +47,4 @@ get_block(int block_num)
     return blocks_base + 4096 * block_num;
 }
 
-// pnode*
-// pages_get_node(int node_id)
-// {
-//     pnode* idx = (pnode*) pages_get_page(0);
-//     return &(idx[pnum]);
-// }
-
-// int
-// blocks_find_empty()
-// {
-//     int bnum = -1;
-//     for (int ii = 2; ii < BLOCK_COUNT; ++ii) {
-//         if (0) { // if page is empty
-//             bnum = ii;
-//             break;
-//         }
-//     }
-//     return bnum;
-// }
-
-// void
-// print_node(pnode* node)
-// {
-//     if (node) {
-//         printf("node{refs: %d, mode: %04o, size: %d, xtra: %d}\n",
-//                node->refs, node->mode, node->size, node->xtra);
-//     }
-//     else {
-//         printf("node{null}\n");
-//     }
-// }
-
 
