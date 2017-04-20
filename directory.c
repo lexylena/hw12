@@ -58,14 +58,11 @@ void print_directory(directory dd) {
 }
 
 dirent* get_dirent(directory dd, const char* name) {
-    dirent** p = &(dd->entries);
     dirent* cur = dd->entries;
     while(cur != 0) {
 	if(cur->name == name) {
-	    *p = cur->next;
 	    return cur;
 	} else if (cur->next != 0) {
-	    p = &(cur->next);
 	    cur = cur->next;
 	} else {
 	    return 0;

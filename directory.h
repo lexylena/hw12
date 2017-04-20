@@ -11,6 +11,7 @@ typedef struct dirent {
     char   name[48];
     int name_len; //length of file name
     int inode_idx; // index in inodes array
+    dirent* next;
 } dirent;
 
 typedef struct directory {
