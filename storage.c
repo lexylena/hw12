@@ -53,15 +53,15 @@ storage_init(const char* path)
 dirent*
 find_dirent(const char* path)
 {
-    slist* lpath = s_split(path, "/");
-    inode* node = get_node(0);
-    directory* parent = node->datablocks[0];
+    slist* lpath = s_split(path, '/');
+    inode* node = get_inode(0);
+    directory* parent = node->data_blocks[0];
     dirent* cur = 0;
     while(lpath != 0) {
         cur = get_dirent(parent, lpath->data);
 	if(lpath->next != 0) {
-	    node = get_node(cur->inode_idx);
-	    parent = node->datablocks[0];
+	    node = get_inode(cur->inode_idx);
+	    parent = node->data_blocks[0];
             lpath = lpath->next;
         } else {
 	    return cur;
@@ -83,7 +83,7 @@ find_dirent(const char* path)
         find basename in dirents
         return that dirent
     */
-}
+
 
 int
 get_stat(const char* path, struct stat* st)

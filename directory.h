@@ -20,7 +20,7 @@ typedef struct directory {
 } directory;
 
 void directory_init(); // create root directory from already created inode at index 2 (always)
-
+dirent* get_dirent(directory* dd, const char* name);
 directory directory_from_pnum(int pnum);
 int directory_lookup_idx(directory dd, const char* name);
 int tree_lookup_pnum(const char* path);
@@ -28,7 +28,7 @@ directory directory_from_path(const char* path);
 int directory_put_ent(directory dd, const char* name, int idx);
 int directory_delete(directory dd, const char* name);
 slist* directory_list(const char* path);
-void print_directory(directory dd);
+void print_directory(directory* dd);
 
 #endif
 
