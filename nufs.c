@@ -101,6 +101,10 @@ nufs_mkdir(const char *path, mode_t mode)
     -Make inode for the directory
     -Make directory structure with that inode
     -Navigate to parent directory and make a dirent with the directory's name and inode index
+
+     -OR-
+     Make directory helper func (needs to make struct and dirent)
+     Pass directory to make_inode
     */
     printf("mkdir(%s)\n", path);
     return -1;
