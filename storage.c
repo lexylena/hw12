@@ -68,7 +68,7 @@ find_dirent(const char* path)
         }
     }
     return cur;
-}
+
     /*
         copy path
         dirname/basename
