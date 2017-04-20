@@ -87,6 +87,15 @@ nufs_unlink(const char *path)
 int
 nufs_rmdir(const char *path)
 {
+    /*
+    REMOVE EMPTY DIRECTORY ONLY
+        - find directory
+        - if 0 dirents:
+            - clear inode, update inode bitmap
+            - remove directory from any dirent lists
+            - free directory
+        else: return -1?
+    */
     printf("rmdir(%s)\n", path);
     return -1;
 }
@@ -96,6 +105,22 @@ nufs_rmdir(const char *path)
 int
 nufs_rename(const char *from, const char *to)
 {
+    /*
+    - find FROM
+    - nufs_access(TO) -> if TO already exists:
+        - check that FROM and TO are both files or both directories
+        - if not, return appropriate error message (EISDIR or ENOTDIR)
+        - if both are directories:
+            - check that FROM is not parent dir of TO; else [EINVAL]
+            - check that TO is empty; else [ENOTEMPTY]
+        - if bad permissions, [EACCESS]
+        - if bad path, [ENOTDIR] or [ENOENT]
+    - if good to go...
+        - remove TO if it already exists
+        - change FROM's dirent->name
+        - return 0
+
+    */
     printf("rename(%s => %s)\n", from, to);
     return -1;
 }
@@ -103,6 +128,14 @@ nufs_rename(const char *from, const char *to)
 int
 nufs_chmod(const char *path, mode_t mode)
 {
+    /*
+    - find dirent
+    - get corresponding inode
+    - change mode
+
+    TODO: Add chmod function in inode.c
+
+    */
     printf("chmod(%s, %04o)\n", path, mode);
     return -1;
 }
@@ -110,6 +143,15 @@ nufs_chmod(const char *path, mode_t mode)
 int
 nufs_truncate(const char *path, off_t size)
 {
+    /*
+    - find dirent, get inode
+    - check permissions and verify that user can write to file (EISDIR if directory)
+    - if size > inode->size: add appropriate # of blank blocks to inode->data_blocks and update size
+    - else: remove and clear data_blocks if necessary or just remove x bytes from a block; update size
+
+    TODO: add function to check permissions in storage.c?
+    TODO: add truncate function in superblock.c
+    */
     printf("truncate(%s, %ld bytes)\n", path, size);
     return -1;
 }
@@ -128,6 +170,15 @@ nufs_open(const char *path, struct fuse_file_info *fi)
 int
 nufs_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi)
 {
+    /*
+    - find dirent and inode
+    - check that it's a file
+    - check for read permissions
+    - go through data blocks and append size bytes of data to buf?
+    - return the number of bytes read as offset?
+
+    TODO: add read function to superblock (or inode?)
+    */
     printf("read(%s, %ld bytes, @%ld)\n", path, size, offset);
     const char* data = get_data(path);
 
@@ -144,7 +195,33 @@ nufs_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_fi
 int
 nufs_write(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi)
 {
+    /*
+    - find dirent and inode
+    - check that it's a file
+    - check for write permissions
+    - add data? or write over existing data? 
+    - either way ^, get blocks, copy data from buf to blocks
+    - update inode->data_blocks
+    - return the new size of the data because that's the new offset?
+
+    TODO: add write function to superblock (helper function in datablock?)
+    */
     printf("write(%s, %ld bytes, @%ld)\n", path, size, offset);
+    return -1;
+}
+
+int
+nufs_utimens(const char* path, const struct timespec ts[2])
+{
+    /*
+    (NOT SURE IF PARAMS ARE CORRECT FOR THIS...)
+    - find dirent, get inode
+    - check for permissions or proper access ?
+    - update timestamps (ts[0] = inode->time, ts[1] = inode->mtime)
+    - return 0
+
+    TODO: add utimens function to inode
+    */
     return -1;
 }
 
@@ -165,6 +242,7 @@ nufs_init_ops(struct fuse_operations* ops)
     ops->open	  = nufs_open;
     ops->read     = nufs_read;
     ops->write    = nufs_write;
+    ops->utimens  = nufs_utimens;
 };
 
 struct fuse_operations nufs_ops;

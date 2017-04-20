@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include <sys/mman.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <assert.h>
 #include <stdio.h>
@@ -28,7 +29,7 @@ inodes_init()
 void
 inodes_free()
 {
-    int rv = munmap(inodes_base, INODE_SIZE * BLOCK_COUNT);
+    int rv = munmap((void*)inodes_base, INODE_SIZE * BLOCK_COUNT);
     assert(rv == 0);
 }
 
@@ -38,10 +39,28 @@ get_inode(int inode_num)
     return inodes_base + INODE_SIZE * inode_num;
 }
 
-void
-update_inode(int inode_num, ...)
+// change inode->mode
+// return 0 on success
+// return -1 if flags don't match new mode
+int
+chmod(int inode_num, mode_t mode)
 {
+    inode* node = get_inode(inode_num);
+    if (S_ISREG(mode) != S_ISREG(node->mode)) { // not both files or directories
+        return -1;
+    }
 
+    node->mode = mode;
+    return 0;
+}
+
+int
+update_timestamps(int inode_num, const struct timespec ts[2])
+{
+    inode* node = get_inode(inode_num);
+    node->time = ts[0];
+    node->mtime = ts[1];
+    return 0;
 }
 
 void
