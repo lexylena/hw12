@@ -19,6 +19,15 @@
 int
 nufs_access(const char *path, int mask)
 {
+    /*
+    - path is the file path, mask is mode (exists, read_ok, write_ok, execute_ok)
+    - Check if a file exists using find_dirent
+    - If not, return error code (-1)
+    - If found, check its inode for permissions based on what mask asks for
+    - If it has requested permissions, return 0
+    - If not, return -1
+    */
+
     printf("access(%s, %04o)\n", path, mask);
     return 0;
 }
@@ -44,6 +53,14 @@ int
 nufs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
              off_t offset, struct fuse_file_info *fi)
 {
+    /*
+    1.Find the first directory entry following the given offset.
+    2.Optionally, create a struct stat that describes the file as for getattr (but FUSE only looks at st_ino and the file-type bits of st_mode).
+    3.Call the filler function with arguments of buf, the null-terminated filename, the address of your struct stat (or NULL if you have none), and the offset of the next     directory entry.
+    4. If filler returns nonzero, or if there are no more files, return 0.
+    5. Find the next file in the directory.
+    6. Go back to step 2.
+    */
     struct stat st;
 
     printf("readdir(%s)\n", path);
@@ -64,6 +81,11 @@ nufs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 int
 nufs_mknod(const char *path, mode_t mode, dev_t rdev)
 {
+    /*
+    -If the mode designates a file, make a file
+    -If the mode designates a directory, call mkdir
+    -rdev is only used if mode is a block device or character device
+    */
     printf("mknod(%s, %04o)\n", path, mode);
     return -1;
 }
@@ -73,6 +95,13 @@ nufs_mknod(const char *path, mode_t mode, dev_t rdev)
 int
 nufs_mkdir(const char *path, mode_t mode)
 {
+    /*
+    TODO: Create function that creates a directory (maybe modify directory_init?)
+    (Unsure about this ordering)
+    -Make inode for the directory
+    -Make directory structure with that inode
+    -Navigate to parent directory and make a dirent with the directory's name and inode index
+    */
     printf("mkdir(%s)\n", path);
     return -1;
 }
@@ -80,6 +109,15 @@ nufs_mkdir(const char *path, mode_t mode)
 int
 nufs_unlink(const char *path)
 {
+    /*
+    Removes the given file
+    -Navigate to the dirent using find_dirent
+    -Get inode
+    -Check if file or dir
+    -If file, zero out the inode data
+        -free dirent, return 0
+    -If dir, call rmdir
+    */
     printf("unlink(%s)\n", path);
     return -1;
 }

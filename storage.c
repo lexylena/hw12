@@ -51,6 +51,8 @@ storage_init(const char* path)
 dirent*
 find_dirent(const char* path)
 {
+    char* name;
+    
     /*
         store basename
         add dir names into array until dirname(path) returns '.'
