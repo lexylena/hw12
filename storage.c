@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "storage.h"
+#include "util.h"
 
 typedef struct file_data {
     const char* path;
@@ -16,64 +17,80 @@ static file_data file_table[] = {
     {0, 0, 0},
 };
 
+static superblock* sb = 0;
+
+/*
+stat struct
+    mode
+    inode
+    uid
+    access time
+    ctime
+    mtime
+    number of links
+    size
+
+*/
+
 void
 storage_init(const char* path)
 {
     printf("TODO: Store file system data in: %s\n", path);
-    // should call inode_init, directory_init, superblock_init
+    // potentially move this to helper function, have all helper functions in one file
+    inode* inodes = inodes_init();
+    void* datablocks = blocks_init(path);
+    // directory_init();
+    // set return value of superblock_init to some global variable because only one superblock
+    sb = superblock_init(inodes, datablocks);
 }
 
-static int
-streq(const char* aa, const char* bb)
+dirent*
+find_dirent(const char* path)
 {
-    return strcmp(aa, bb) == 0;
-}
-
-static file_data*
-get_file_data(const char* path) {
-    for (int ii = 0; 1; ++ii) {
-        file_data row = file_table[ii];
-
-        if (file_table[ii].path == 0) {
-            break;
-        }
-
-        if (streq(path, file_table[ii].path)) {
-            return &(file_table[ii]);
-        }
-    }
-
-    return 0;
+    /*
+        store basename
+        add dir names into array until dirname(path) returns '.'
+        start at root inode
+        find first dir name in inode's directory's dirents
+        go to that dirent's inode
+        continue down dir names in array...
+        find basename in dirents
+        return that dirent
+    */
 }
 
 int
 get_stat(const char* path, struct stat* st)
 {
-    file_data* dat = get_file_data(path);
-    if (!dat) {
+    // need find_dirent function to find a dirent from given path
+    dirent* entry = find_dirent(path);
+    if (!entry) {
         return -1;
     }
 
+    inode* node = get_inode(entry->inode_idx);
+
     memset(st, 0, sizeof(struct stat));
     st->st_uid  = getuid();
-    st->st_mode = dat->mode;
-    if (dat->data) {
-        st->st_size = strlen(dat->data);
-    }
-    else {
-        st->st_size = 0;
-    }
+    st->st_mode = node->mode;
+    st->size = node->size;
+    st->st_nlink = node->links_count;
+    st->ino = entry->inode_idx;
+    st->st_atime = node->time;
+    st->st_ctime = node->ctime;
+    st->st_mtime = node->mtime;
+
     return 0;
 }
 
 const char*
 get_data(const char* path)
 {
-    file_data* dat = get_file_data(path);
-    if (!dat) {
-        return 0;
-    }
-
-    return dat->data;
+    /*
+        find dirent of file
+        get inode_idx
+        check if blocks_count > 14 (blocks will contain pointers to other blocks containing actual data)
+        go through blocks and get data...
+    */
 }
 
