@@ -83,7 +83,7 @@ find_dirent(const char* path)
         find basename in dirents
         return that dirent
     */
-
+}
 
 int
 get_stat(const char* path, struct stat* st)
