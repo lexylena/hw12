@@ -53,13 +53,13 @@ void
 allocate_overflow_blocks(int inode_num, void* overflow)
 {
 	inode* node = get_inode(inode_num);
-	void* overflow_block = get_block(get_free_block());
+	void** overflow_block = get_block(get_free_block());
 	int overflow_blocks = node->blocks_count - 14;
 	for (int ii = 0; ii < overflow_blocks; ++ii) {
 		int block_num  = get_free_block();
         	void* dst = get_block(block_num);
-        	memcpy(dst, (void*)overflow + ii * 4096, 4096);
- //       	*(overflow_block + ii * sizeof(void*)) = dst;
+        	memcpy(dst, overflow + ii * 4096, 4096);
+        	*(overflow_block + ii * sizeof(void*)) = dst;
 	}
 
 	node->data_blocks[14] = overflow_block;
