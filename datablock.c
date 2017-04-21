@@ -47,4 +47,17 @@ get_block(int block_num)
     return blocks_base + 4096 * block_num;
 }
 
+int
+get_block_num(void* block)
+{
+    uint diff = (uint)block - (uint)blocks_base;
+    assert(diff % 4096 == 0);
+    return ((uint)block - (uint)blocks_base) / 4096;
+}
+
+// int
+// truncate_block(void* block, size_t bytes)
+// {
+    
+// }
 

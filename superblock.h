@@ -19,6 +19,7 @@ superblock* superblock_init(inode* inodes, void* data_blocks);
 int get_free_inode();
 int get_free_block();
 inode* make_inode(mode_t mode, char* data);
+void delete_inode(int inode_num);
 
 
 #endif
