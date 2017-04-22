@@ -37,7 +37,7 @@ find_dirent(const char* path)
     while(lpath != 0) {
         cur = get_dirent(parent, lpath->data);
         if (cur == 0) {
-            return 0; // should be something about wrong dir in path?
+            return -1; // should be something about wrong dir in path?
         }
         if(lpath->next != 0) {
             node = get_inode(cur->inode_idx);
@@ -47,7 +47,7 @@ find_dirent(const char* path)
             return cur;
         }
     }
-    return 0;
+    return -1;
 }
 
 int directory_lookup_idx(directory dd, const char* name) {
@@ -67,15 +67,21 @@ directory directory_from_path(const char* path){
 int directory_put_ent(directory* dd, char* name, int idx) {
     //Create new entry with name "name" and index idx. 
     //Add this entry to the list of entries for directory dd 
-    directory* ndir = (directory*) malloc(sizeof(directory));
-    ndir->entries = 0;
-    ndir->node = get_inode(idx);
+    
     dirent* ndirent = (dirent*) malloc(sizeof(dirent));
     ndirent->name = name;
     ndirent->name_len = strlen(name);
     ndirent->inode_idx = idx;
     ndirent->next = dd->entries;
     dd->entries = ndirent;
+}
+
+int
+directory_make(int idx)
+{
+    directory* ndir = (directory*) malloc(sizeof(directory));
+    ndir->entries = 0;
+    ndir->node = get_inode(idx);
 }
 
 void

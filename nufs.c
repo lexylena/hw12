@@ -86,8 +86,10 @@ nufs_mknod(const char *path, mode_t mode, dev_t rdev)
     -If the mode designates a directory, call mkdir
     -rdev is only used if mode is a block device or character device
     */
+    int rv = mknod_help(path, mode);
+    assert (rv == 0);
     printf("mknod(%s, %04o)\n", path, mode);
-    return -1;
+    return 0;
 }
 
 // most of the following callbacks implement

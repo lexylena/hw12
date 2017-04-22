@@ -84,22 +84,46 @@ get_data(const char* path)
 int
 mkdir_help(const char* path, mode_t mode) 
 {
+    if (find_dirent(path) != -1) 
+    {
+        return -1;
+    }
     char* name;
     char* dir;
     size_t len = strlen(path);
     memcpy(name, path, len);
     memcpy(dir, path, len);
-    //TODO: need to link this to an inode somehow
     int idx = get_free_inode();
     inode* node = make_inode(idx, mode);
     dirent* pdirent = find_dirent(dirname(dir));
     inode* pnode = get_inode(pdirent->inode_idx);
     directory* pdir = pnode->data_blocks[0];
-    //TODO: needs to return a dirent* so that the make_inode function can mutate it
+    directory_make(idx);
     directory_put_ent(pdir, basename(name), idx);
     return 0;
 }
-    
+
+int 
+mknod_help(const char* path, mode_t mode) 
+{
+    if (find_dirent(path) != -1) 
+    {
+        return -1;
+    }
+    char* name;
+    char* dir;
+    size_t len = strlen(path);
+    memcpy(name, path, len);
+    memcpy(dir, path, len);
+    int idx = get_free_inode();
+    inode* node = make_inode(idx, mode);
+    dirent* pdirent = find_dirent(dirname(dir));
+    inode* pnode = get_inode(pdirent->inode_idx);
+    directory* pdir = pnode->data_blocks[0];
+    directory_put_ent(pdir, basename(name), idx);
+    return 0;
+}    
+
 int
 rmdir_help(const char* path)
 {
@@ -171,3 +195,6 @@ utimens_help(const char* path, const struct timespec ts[2])
     update_timestamps(entry->inode_idx, ts);
     return 0;
 }
+
+
+    
