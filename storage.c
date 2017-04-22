@@ -120,3 +120,18 @@ get_data(const char* path)
     */
 }
 
+int
+mkdir_help(const char* path, mode_t mode) 
+{
+    const char* name;
+    basename_r(path, name);
+    //TODO: need to link this to an inode somehow
+    int idk = make_inode();
+    dirent* pdirent = find_dirent(dirname(path));
+    inode* pnode = get_node(pdirent->inode_idx);
+    directory* pdir = pnode->data_blocks[0];
+    //TODO: needs to return a dirent* so that the make_inode function can mutate it
+    directory_put_ent(pdir, name, idx);
+    return 0;
+}
+    

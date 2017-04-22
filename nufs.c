@@ -105,9 +105,14 @@ nufs_mkdir(const char *path, mode_t mode)
      -OR-
      Make directory helper func (needs to make struct and dirent)
      Pass directory to make_inode
+
+    Im putting all of this in a helper in storage.c
     */
+
+    int rv = mkdir_help(path, mode);
+    assert (rv == 0);
     printf("mkdir(%s)\n", path);
-    return -1;
+    return 0;
 }
 
 int
