@@ -27,6 +27,10 @@ nufs_access(const char *path, int mask)
     - If it has requested permissions, return 0
     - If not, return -1
     */
+    int rv = access_help(path, mask);
+    if (rv == -1) {
+	return -1;
+    }
 
     printf("access(%s, %04o)\n", path, mask);
     return 0;

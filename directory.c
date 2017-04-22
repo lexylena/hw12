@@ -37,7 +37,7 @@ find_dirent(const char* path)
     while(lpath != 0) {
         cur = get_dirent(parent, lpath->data);
         if (cur == 0) {
-            return -1; // should be something about wrong dir in path?
+            return 0; // should be something about wrong dir in path?
         }
         if(lpath->next != 0) {
             node = get_inode(cur->inode_idx);
@@ -47,7 +47,7 @@ find_dirent(const char* path)
             return cur;
         }
     }
-    return -1;
+    return 0;
 }
 
 int directory_lookup_idx(directory dd, const char* name) {
