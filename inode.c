@@ -7,6 +7,8 @@
 #include <unistd.h>
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 #include <errno.h>
 
 #include "inode.h"
@@ -37,9 +39,8 @@ inodes_free()
 }
 
 inode*
-make_inode(mode_t mode)
+make_inode(int inode_num, mode_t mode)
 {
-    int inode_num = get_free_inode();
     inode* node = get_inode(inode_num);
     node->mode = (int)mode;
     node->uid = getuid();
@@ -75,9 +76,9 @@ get_inode(int inode_num)
 int
 get_inode_num(inode* node)
 {
-    uint diff = (uint)node - (uint)inodes_base;
+    int64_t diff = (int64_t)node - (int64_t)inodes_base;
     assert(diff % INODE_SIZE == 0);
-    return ((uint)node - (uint)inodes_base) / INODE_SIZE;
+    return (int) diff / INODE_SIZE;
 }
 
 /* 

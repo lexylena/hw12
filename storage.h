@@ -7,6 +7,7 @@
 
 void storage_init(const char* path);
 int         get_stat(const char* path, struct stat* st);
+int mkdir_help(const char* path, mode_t mode);
 const char* get_data(const char* path);
 
 #endif

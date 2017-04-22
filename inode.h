@@ -21,7 +21,7 @@ typedef struct inode {
 
 inode* inodes_init();
 void inodes_free();
-inode* make_inode(mode_t mode);
+inode* make_inode(int inode_num, mode_t mode);
 inode* get_inode(int inode_num);
 int get_inode_num(inode* node);
 int change_mode(int inode_num, mode_t mode);

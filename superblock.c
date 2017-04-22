@@ -136,8 +136,8 @@ delete_inode(int inode_num)
     }
 
     // data blocks of indirect pointer
-    void** overflow_blocks = (void**)node->blocks[14];
-    if (overflow) {
+    void** overflow_blocks = (void**)node->data_blocks[14];
+    if (overflow_blocks) {
         for (int ii = 0; ii < node->blocks_count - 14; ++ii) {
             block = *(overflow_blocks + ii * sizeof(void*));
             memset(block, 0, 4096);
@@ -169,8 +169,8 @@ read_data(int inode_num)
     }
 
     // get data blocks of indirect pointer
-    void** overflow_blocks = (void**)node->blocks[14];
-    if (overflow) {
+    void** overflow_blocks = (void**)node->data_blocks[14];
+    if (overflow_blocks) {
         for (int ii = 0; ii < node->blocks_count - 14; ++ii) {
             block = *(overflow_blocks + ii * sizeof(void*));
             if (ii == node->blocks_count - 15) { // if last block
@@ -182,7 +182,7 @@ read_data(int inode_num)
         }
     }
 
-    offset += (node->blocks->count - 1) * 4096;
+    offset += (node->blocks_count - 1) * 4096;
     assert(offset == node->size);
     return (char*)buf;
     

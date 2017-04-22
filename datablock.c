@@ -50,9 +50,9 @@ get_block(int block_num)
 int
 get_block_num(void* block)
 {
-    uint diff = (uint)block - (uint)blocks_base;
+    int64_t diff = (int64_t)block - (int64_t)blocks_base;
     assert(diff % 4096 == 0);
-    return ((uint)block - (uint)blocks_base) / 4096;
+    return (int) diff / 4096;
 }
 
 // int
