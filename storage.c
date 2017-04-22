@@ -216,8 +216,26 @@ int
 unlink_help(const char* path)
 {
 
-    dirent* dir = find_dirent(path);
-    int ret = dir->inode_idx;
+    slist* lpath = s_split(path, '/');
+    inode* node = get_inode(0);
+    directory* parent = node->data_blocks[0];
+    dirent* cur = 0; // file to delete
+    while(lpath != 0) {
+        cur = get_dirent(parent, lpath->data);
+        if (cur == 0) {
+            return -1; // no directory found
+        }
+        if(lpath->next != 0) {
+            node = get_inode(cur->inode_idx);
+            parent = node->data_blocks[0];
+            lpath = lpath->next;
+        } else {
+            break;
+        }
+    }
+
+    int ret = cur->inode_idx;
+    inode* dir_node = get_inode(cur->inode_idx);
     inode* dir_node = get_inode(dir->inode_idx);
     if (!(S_ISREG(dir_node->mode))) {
         return -1; // path is not to file
@@ -227,11 +245,11 @@ unlink_help(const char* path)
     }
    
     
-    dirent* pdir = find_dirent(dirname(path));
-    inode* pnode = get_inode(pdir->inode_idx);
-    directory* parent = (directory*)pnode->data_blocks[0];
-    directory_remove_ent(parent, dir); // remove entry from parent directory entries list
-    free(dir);
+    //dirent* pdir = find_dirent(dirname(path));
+    //inode* pnode = get_inode(pdir->inode_idx);
+    //directory* parent = (directory*)pnode->data_blocks[0];
+    directory_remove_ent(parent, cur); // remove entry from parent directory entries list
+    free(cur);
 
     delete_inode(ret);
     return 0;
