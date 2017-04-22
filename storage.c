@@ -25,19 +25,6 @@ static file_data file_table[] = {
 
 static superblock* sb = 0;
 
-/*
-stat struct
-    mode
-    inode
-    uid
-    access time
-    ctime
-    mtime
-    number of links
-    size
-
-*/
-
 void
 storage_init(const char* path)
 {
@@ -45,8 +32,7 @@ storage_init(const char* path)
     // potentially move this to helper function, have all helper functions in one file
     inode* inodes = inodes_init();
     void* datablocks = blocks_init(path);
-    // directory_init();
-    // set return value of superblock_init to some global variable because only one superblock
+    directory_init();
     sb = superblock_init(inodes, datablocks);
 }
 
@@ -68,21 +54,6 @@ find_dirent(const char* path)
         }
     }
     return cur;
-
-    /*
-        copy path
-        dirname/basename
-        copy that
- 
-        store basename
-        add dir names into array until dirname(path) returns '.'
-        start at root inode
-        find first dir name in inode's directory's dirents
-        go to that dirent's inode
-        continue down dir names in array...
-        find basename in dirents
-        return that dirent
-    */
 }
 
 int
@@ -112,12 +83,10 @@ get_stat(const char* path, struct stat* st)
 const char*
 get_data(const char* path)
 {
-    /*
-        find dirent of file
-        get inode_idx
-        check if blocks_count > 14 (blocks will contain pointers to other blocks containing actual data)
-        go through blocks and get data...
-    */
+    dirent* entry = find_dirent(path);
+    // permissions should be checked before this is called
+    // probably with whatever function nufs_access uses
+    return read_data(entry->inode_idx);
 }
 
 int
@@ -126,7 +95,8 @@ mkdir_help(const char* path, mode_t mode)
     const char* name;
     basename_r(path, name);
     //TODO: need to link this to an inode somehow
-    int idk = make_inode();
+    inode* node = make_inode(mode);
+    int idk = get_inode_num(node);
     dirent* pdirent = find_dirent(dirname(path));
     inode* pnode = get_node(pdirent->inode_idx);
     directory* pdir = pnode->data_blocks[0];

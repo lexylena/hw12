@@ -26,6 +26,7 @@ inode* get_inode(int inode_num);
 int get_inode_num(inode* node);
 int change_mode(int inode_num, mode_t mode);
 int update_timestamps(int inode_num, const struct timespec ts[2]);
+int has_permissions(int inode_num, int permissions);
 void print_inode(int inode_num);
 
 

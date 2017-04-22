@@ -19,7 +19,7 @@ int get_free_inode();
 int get_free_block();
 int write_data(int inode_num, const char* data);
 void delete_inode(int inode_num);
-char* get_data(int inode_num);
+const char* read_data(int inode_num);
 
 
 #endif

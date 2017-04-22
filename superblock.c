@@ -150,8 +150,8 @@ delete_inode(int inode_num)
     sb->inodes_bitmap[inode_num] = 0;
 }
 
-char*
-get_data(int inode_num)
+const char*
+read_data(int inode_num)
 {
     inode* node = get_inode(inode_num);
     void* buf = malloc(node->size);

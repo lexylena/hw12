@@ -106,6 +106,40 @@ update_timestamps(int inode_num, const struct timespec ts[2])
     return 0;
 }
 
+/*
+permissions should be the expected user bit (or minimum expected)
+    - (exec 1, write 2, read 4)
+only checks permissions of user bit in the mode due to simplicity of this file system,
+so other permissions don't really matter... probably a less shitty way to do this, but
+the shittiness of this code is good enough for me atm...
+*/
+
+int
+has_permissions(int inode_num, int permissions)
+{
+    inode* node = get_inode(inode_num);
+    int uperm = node->mode % 10;
+
+    if (uperm == permissions || uperm == 7) {
+        return 1;
+    }
+
+    if (permissions == 1) {
+        return (uperm % 2 == 1); // for exec permissions, user bit will always be odd
+    }
+
+    if (permissions == 2) {
+        return (uperm == 3 || uperm == 6); 
+    }
+
+    if (permissions == 4) {
+        // assuming modes are always valid modes and user bit will never be something weird like 8
+        return (uperm > permissions);
+    }
+
+    return 0;
+}
+
 void
 print_inode(int inode_num)
 {
