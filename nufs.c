@@ -128,11 +128,10 @@ nufs_unlink(const char *path)
     Removes the given file
     -Navigate to the dirent using find_dirent
     -Get inode
-    -Check if file or dir
     -If file, zero out the inode data
         -free dirent, return 0
-    -If dir, call rmdir
     */
+    int unlink_help(path);
     printf("unlink(%s)\n", path);
     return -1;
 }

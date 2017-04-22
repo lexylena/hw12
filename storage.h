@@ -15,5 +15,7 @@ int rename_help(const char* from, const char* to, int to_exists);
 int chmod_help(const char* path, mode_t mode);
 int write_help(const char* path, const char* buf, size_t size, off_t offset);
 int utimens_help(const char* path, const struct timespec ts[2]);
+int access_help(const char* path, int mask);
+int unlink_help(path);
 
 #endif

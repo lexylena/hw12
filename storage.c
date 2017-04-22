@@ -212,5 +212,43 @@ access_help(const char* path, int mask)
     }
 }
 
+int
+unlink_help(const char* path)
+{
+
+    slist* lpath = s_split(path, '/');
+    inode* node = get_inode(0);
+    directory* parent = node->data_blocks[0];
+    dirent* cur = 0; // file to delete
+    while(lpath != 0) {
+        cur = get_dirent(parent, lpath->data);
+        if (cur == 0) {
+            return -1; // no directory found
+        }
+        if(lpath->next != 0) {
+            node = get_inode(cur->inode_idx);
+            parent = node->data_blocks[0];
+            lpath = lpath->next;
+        } else {
+            break;
+        }
+    }
+
+    int ret = cur->inode_idx;
+    inode* dir_node = get_inode(cur->inode_idx);
+    if (!(S_ISREG(dir_node->mode))) {
+        return -1; // path is not to file
+    }
+    if (has_permissions(ret, 2) == 0) {
+        return -1; // must have write permissions
+    }
+   
+
+    directory_remove_ent(parent, cur); // remove entry from parent directory entries list
+    free(cur);
+
+    delete_inode(ret);
+    return 0;
+}
 
     
