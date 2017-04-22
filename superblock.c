@@ -53,7 +53,7 @@ int
 allocate_overflow_blocks(int inode_num, void* overflow, size_t size, off_t offset)
 {
     inode* node = get_inode(inode_num);
-    void** overflow_block = (void**)get_block(node->data_blocks[14]);
+    void** overflow_block = (void**)(node->data_blocks[14]);
     if (overflow_block == 0) { // all new data blocks for indirect pointers
         assert(offset == 0);
         overflow_block = get_block(get_free_block());
@@ -85,7 +85,7 @@ allocate_overflow_blocks(int inode_num, void* overflow, size_t size, off_t offse
 
 // returns number of bytes written
 int
-write_data(int inode_num, char* data, size_t size, off_t offset)
+write_data(int inode_num, const char* data, size_t size, off_t offset)
 {
     inode* node = get_inode(inode_num);
     if (S_ISDIR(node->mode)) {
@@ -130,7 +130,6 @@ write_data(int inode_num, char* data, size_t size, off_t offset)
         ret = allocate_overflow_blocks(inode_num, (void*)data, size, offset);
     }
 
-    // TODO: update timestamps
     return ret;
 }
 

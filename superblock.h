@@ -17,9 +17,8 @@ typedef struct superblock {
 superblock* superblock_init(inode* inodes, void* data_blocks);
 int get_free_inode();
 int get_free_block();
-int write_data(int inode_num, char* data, size_t size, off_t offset);
+int write_data(int inode_num, const char* data, size_t size, off_t offset);
 void delete_inode(int inode_num);
 const char* read_data(int inode_num);
-
 
 #endif

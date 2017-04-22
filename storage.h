@@ -12,6 +12,7 @@ int mkdir_help(const char* path, mode_t mode);
 int rmdir_help(const char* path);
 // int rename_help(const char* from, const char* to);
 int chmod_help(const char* path, mode_t mode);
-int write_help(const char* path, char* buf, size_t size, off_t offset);
+int write_help(const char* path, const char* buf, size_t size, off_t offset);
+int utimens_help(const char* path, const struct timespec ts[2]);
 
 #endif

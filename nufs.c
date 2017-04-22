@@ -134,15 +134,6 @@ nufs_unlink(const char *path)
 int
 nufs_rmdir(const char *path)
 {
-    /*
-    REMOVE EMPTY DIRECTORY ONLY
-        - find directory
-        - if 0 dirents:
-            - clear inode, update inode bitmap
-            - remove directory from any dirent lists
-            - free directory
-        else: return -1?
-    */
     printf("rmdir(%s)\n", path);
     return rmdir_help(path);
 }
@@ -235,17 +226,6 @@ nufs_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_fi
 int
 nufs_write(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi)
 {
-    /*
-    - find dirent and inode
-    - check that it's a file
-    - check for write permissions
-    - add data? or write over existing data? 
-    - either way ^, get blocks, copy data from buf to blocks
-    - update inode->data_blocks
-    - return the new size of the data because that's the new offset?
-
-    TODO: add write function to superblock (helper function in datablock?)
-    */
     printf("write(%s, %ld bytes, @%ld)\n", path, size, offset);
     write_help(path, buf, size, offset);
     return 0;
@@ -254,16 +234,11 @@ nufs_write(const char *path, const char *buf, size_t size, off_t offset, struct 
 int
 nufs_utimens(const char* path, const struct timespec ts[2])
 {
-    /*
-    (NOT SURE IF PARAMS ARE CORRECT FOR THIS...)
-    - find dirent, get inode
-    - check for permissions or proper access ?
-    - update timestamps (ts[0] = inode->time, ts[1] = inode->mtime)
-    - return 0
-
-    TODO: add utimens function to inode
-    */
-    return -1;
+    printf("utimens(accessed:%lld.%.9ld, modified:%lld.%.9ld)\n",
+        (long long)ts[0].tv_sec, ts[0].tv_nsec,
+        (long long)ts[1].tv_sec, ts[1].tv_nsec);
+    utimens_help(path, ts);
+    return 0;
 }
 
 void

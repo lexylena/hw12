@@ -119,10 +119,18 @@ chmod_help(const char* path, mode_t mode)
 }
 
 int
-write_help(const char* path, char* buf, size_t size, off_t offset)
+write_help(const char* path, const char* buf, size_t size, off_t offset)
 {
     dirent* entry = find_dirent(path);
     int ret = write_data(entry->inode_idx, buf, size, offset);
     assert(ret == size + offset);
+    return 0;
+}
+
+int
+utimens_help(const char* path, const struct timespec ts[2])
+{
+    dirent* entry = find_dirent(path);
+    update_timestamps(entry->inode_idx, ts);
     return 0;
 }
