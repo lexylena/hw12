@@ -144,7 +144,7 @@ nufs_rmdir(const char *path)
         else: return -1?
     */
     printf("rmdir(%s)\n", path);
-    return -1;
+    return rmdir_help(path);
 }
 
 // implements: man 2 rename
@@ -175,16 +175,9 @@ nufs_rename(const char *from, const char *to)
 int
 nufs_chmod(const char *path, mode_t mode)
 {
-    /*
-    - find dirent
-    - get corresponding inode
-    - change mode
-
-    TODO: Add chmod function in inode.c
-
-    */
+    // assumes only one user, so no checking permissions for chmod...?
     printf("chmod(%s, %04o)\n", path, mode);
-    return -1;
+    return chmod_help(path, mode);
 }
 
 int
@@ -254,7 +247,8 @@ nufs_write(const char *path, const char *buf, size_t size, off_t offset, struct 
     TODO: add write function to superblock (helper function in datablock?)
     */
     printf("write(%s, %ld bytes, @%ld)\n", path, size, offset);
-    return -1;
+    write_help(path, buf, size, offset);
+    return 0;
 }
 
 int

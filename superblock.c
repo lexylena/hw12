@@ -50,76 +50,91 @@ get_free_block()
 
 // returns number of bytes written in overflow blocks
 int
-allocate_overflow_blocks(int inode_num, void* overflow)
+allocate_overflow_blocks(int inode_num, void* overflow, size_t size, off_t offset)
 {
-	inode* node = get_inode(inode_num);
-	void** overflow_block = get_block(get_free_block());
-	int overflow_blocks = node->blocks_count - 14;
-    int offset;
-	for (int ii = 0; ii < overflow_blocks; ++ii) {
-		int block_num  = get_free_block();
-    	void* dst = get_block(block_num);
-        if (ii == overflow_blocks - 1) { // if last block
-            offset = (int) strlen(overflow + ii * 4096);
-            memcpy(dst, overflow + ii * 4096, offset);
+    inode* node = get_inode(inode_num);
+    void** overflow_block = (void**)get_block(node->data_blocks[14]);
+    if (overflow_block == 0) { // all new data blocks for indirect pointers
+        assert(offset == 0);
+        overflow_block = get_block(get_free_block());
+    }
+
+    int overflow_blocks = node->blocks_count - 14;
+    int beginning_block = (int)(offset / 4096) - 15;
+    for (int ii = beginning_block; ii < overflow_blocks; ++ii) {
+        void* dst = get_block(ii);
+        if (dst == 0) { // new blocks are being added
+            int block_num = get_free_block();
+            dst = get_block(block_num);
+        }
+        if (ii == beginning_block) { // if first block
+            memcpy(dst + offset % 4096, overflow, 4096 - (offset % 4096));
+            offset += (4096 - (offset % 4096));
+        } else if (ii == overflow_blocks - 1) { // if last block
+            memcpy(dst, overflow + ii * 4096, size % 4096);
+            offset += size % 4096;
         } else {
-        	memcpy(dst, overflow + ii * 4096, 4096);
+            memcpy(dst, overflow + ii * 4096, 4096);
+            offset += 4096;
         }
         *(overflow_block + ii * sizeof(void*)) = dst;
-	}
-
-	node->data_blocks[14] = overflow_block;
-    if (offset == 0) { // data perfectly takes up x number of blocks
-        offset = overflow_blocks * 4096;
-    } else {
-        offset += (overflow_blocks - 1) * 4096;
     }
+	node->data_blocks[14] = overflow_block;
     return offset;
 }
 
 // returns number of bytes written
 int
-write_data(int inode_num, const char* data)
+write_data(int inode_num, char* data, size_t size, off_t offset)
 {
     inode* node = get_inode(inode_num);
-    assert(S_ISREG(node->mode));
-    
-    node->size = (int) strlen(data);
-    node->blocks_count = (int)(node->size / 4096);
-    assert(node->blocks_count * 4096 > node->size);
-    int offset;
+    if (S_ISDIR(node->mode)) {
+        return -1; // not a file
+    }
+    int ret;
+    node->size += size; // update size
+    node->blocks_count += (int) (size / 4096); // update blocks_count
+    int beginning_block = (int) (offset / 4096) - 1;
 
-    for (int ii = 0; ii < node->blocks_count && ii < 14; ++ii) {
-        int block_num  = get_free_block();
-        void* dst = get_block(block_num);
-        if (ii == node->blocks_count - 1) { // if last block
-            offset = (int) strlen((char*)((void*)data + ii * 4096));
-            memcpy(dst, (void*)data + ii * 4096, offset);
-        } else {
-            memcpy(dst, (void*)data + ii * 4096, 4096);
+    if (beginning_block < 14) {
+        for (int ii = beginning_block; ii < node->blocks_count && ii < 14; ++ii) {
+            void* dst = get_block(ii);
+            if (dst == 0) { // new blocks are being added
+                int block_num = get_free_block();
+                dst = get_block(block_num);
+            }
+
+            if (ii == beginning_block) { // if first block
+                memcpy(dst + offset % 4096, (void*)data, 4096 - (offset % 4096));
+                offset += (4096 - (offset % 4096));
+            } else if (ii == node->blocks_count - 1) { // if last block
+                memcpy(dst, (void*)data + ii * 4096, size % 4096);
+                offset += size % 4096;
+            } else {
+                memcpy(dst, (void*)data + ii * 4096, 4096);
+                offset += 4096;
+            }
+            node->data_blocks[ii] = dst;
         }
-        node->data_blocks[ii] = dst;
+
+        ret = offset;
+
+        // now handle any data that requires more than 14 blocks
+        if (node->blocks_count > 14) {
+            void* overflow = (void*)data + 14 * 4096;
+            // number of bytes written in overflow blocks
+            int bytes_left = node->size - offset;
+            ret = allocate_overflow_blocks(inode_num, overflow, bytes_left, 0);
+        }
+    } else { // beginning block is an indirect pointer to a data block
+        ret = allocate_overflow_blocks(inode_num, (void*)data, size, offset);
     }
 
-    // handle data that requires more than 14 blocks
-    if (node->blocks_count > 14) {
-        void* overflow = (void*)data + 14 * 4096;
-        offset = allocate_overflow_blocks(inode_num, overflow);
-        offset += 14 * 4096;
-    } else {
-        if (offset == 0) { // data perfectly takes up < 14 blocks
-            offset = node->blocks_count * 4096;
-        } else {
-            offset += (node->blocks_count - 1) * 4096;
-        }
-    }
-
-    assert(offset == node->size);
     // TODO: update timestamps
-    return offset;
+    return ret;
 }
 
-// deletes inode and all of its data blocks
+// deletes inode and all of its data blocks (if file)
 void
 delete_inode(int inode_num)
 {
@@ -127,22 +142,24 @@ delete_inode(int inode_num)
     void* block;
     int block_num;
 
-    // delete data blocks of direct pointers
-    for (int ii = 0; ii < node->blocks_count && ii < 14; ++ii) {
-        block = node->data_blocks[ii];
-        memset(block, 0, 4096);
-        block_num = get_block_num(block);
-        sb->blocks_bitmap[block_num] = 0;
-    }
-
-    // data blocks of indirect pointer
-    void** overflow_blocks = (void**)node->data_blocks[14];
-    if (overflow_blocks) {
-        for (int ii = 0; ii < node->blocks_count - 14; ++ii) {
-            block = *(overflow_blocks + ii * sizeof(void*));
+    if (S_ISREG(node->mode)) {
+        // delete data blocks of direct pointers
+        for (int ii = 0; ii < node->blocks_count && ii < 14; ++ii) {
+            block = node->data_blocks[ii];
             memset(block, 0, 4096);
             block_num = get_block_num(block);
             sb->blocks_bitmap[block_num] = 0;
+        }
+
+        // data blocks of indirect pointer
+        void** overflow_blocks = (void**)node->data_blocks[14];
+        if (overflow_blocks) {
+            for (int ii = 0; ii < node->blocks_count - 14; ++ii) {
+                block = *(overflow_blocks + ii * sizeof(void*));
+                memset(block, 0, 4096);
+                block_num = get_block_num(block);
+                sb->blocks_bitmap[block_num] = 0;
+            }
         }
     }
 

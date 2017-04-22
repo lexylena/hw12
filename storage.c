@@ -3,6 +3,8 @@
 #include <string.h>
 #include <libgen.h>
 #include <stdlib.h>
+#include <sys/stat.h>
+#include <assert.h>
 
 #include "storage.h"
 #include "superblock.h"
@@ -38,29 +40,6 @@ storage_init(const char* path)
     sb = superblock_init(inodes, datablocks);
     root_path = malloc(sizeof(char));
     *root_path = '/';
-}
-
-dirent*
-find_dirent(const char* path)
-{
-    slist* lpath = s_split(path, '/');
-    inode* node = get_inode(0);
-    directory* parent = node->data_blocks[0];
-    dirent* cur = 0;
-    while(lpath != 0) {
-        cur = get_dirent(parent, lpath->data);
-        if (cur == 0) {
-            return 0; // should be something about wrong dir in path?
-        }
-    	if(lpath->next != 0) {
-        	node = get_inode(cur->inode_idx);
-        	parent = node->data_blocks[0];
-            lpath = lpath->next;
-        } else {
-    	    return cur;
-        }
-    }
-    return 0;
 }
 
 int
@@ -120,3 +99,30 @@ mkdir_help(const char* path, mode_t mode)
     return 0;
 }
     
+int
+rmdir_help(const char* path)
+{
+    int inode_num = directory_delete(path);
+    if (inode_num == -1) {
+        return -1; // somehow log errors
+    }
+
+    delete_inode(inode_num);
+    return 0;
+}
+
+int
+chmod_help(const char* path, mode_t mode)
+{
+    dirent* entry = find_dirent(path);
+    return change_mode(entry->inode_idx, mode);
+}
+
+int
+write_help(const char* path, char* buf, size_t size, off_t offset)
+{
+    dirent* entry = find_dirent(path);
+    int ret = write_data(entry->inode_idx, buf, size, offset);
+    assert(ret == size + offset);
+    return 0;
+}

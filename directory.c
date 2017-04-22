@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 
 directory* root;
 
@@ -14,8 +15,39 @@ void directory_init() {
     root->node = root_node; // set root directory's node
 }
 
-directory directory_from_pnum(int pnum) {
-    //dont think we need this
+dirent* get_dirent(directory* dd, const char* name) {
+    dirent* cur = dd->entries;
+    while(cur != 0) {
+        if(strcmp(cur->name, name)) {
+            return cur;
+        }
+        cur = cur->next;
+    }
+    return 0;
+}
+
+
+dirent*
+find_dirent(const char* path)
+{
+    slist* lpath = s_split(path, '/');
+    inode* node = get_inode(0);
+    directory* parent = node->data_blocks[0];
+    dirent* cur = 0;
+    while(lpath != 0) {
+        cur = get_dirent(parent, lpath->data);
+        if (cur == 0) {
+            return 0; // should be something about wrong dir in path?
+        }
+        if(lpath->next != 0) {
+            node = get_inode(cur->inode_idx);
+            parent = node->data_blocks[0];
+            lpath = lpath->next;
+        } else {
+            return cur;
+        }
+    }
+    return 0;
 }
 
 int directory_lookup_idx(directory dd, const char* name) {
@@ -24,10 +56,6 @@ int directory_lookup_idx(directory dd, const char* name) {
     //return that entry's index
 }
 
-int tree_lookup_pnum(const char* path) {
-    //Honestly idk what this should do
-
-}
 
 directory directory_from_path(const char* path){
     //Read first name in path up until a "/" character
@@ -50,11 +78,64 @@ int directory_put_ent(directory* dd, char* name, int idx) {
     dd->entries = ndirent;
 }
 
-int directory_delete(directory dd, const char* name) {
-    //iterate through entries for dd
-    //grab the entry with the name provided
-    //remove that entry from the list
-    //return some int for success
+void
+directory_remove_ent(directory* parent, dirent* entry)
+{
+    dirent* cur = parent->entries;
+    while (cur != 0 && cur->next != 0) {
+        if (strcmp(cur->next->name, entry->name)) {
+            cur->next = entry->next;
+            return;
+        }
+        cur = cur->next;
+    }
+}
+
+/*
+can't call delete_inode from here because somehow need to also
+update bitmap, so if successful, directory_delete returns the 
+deleted directory's inode number so that the calling function
+(most likely rmdir_help) can call delete_inode
+*/
+int
+directory_delete(const char* path)
+{
+    slist* lpath = s_split(path, '/');
+    inode* node = get_inode(0);
+    directory* parent = node->data_blocks[0];
+    dirent* cur = 0; // directory to delete
+    while(lpath != 0) {
+        cur = get_dirent(parent, lpath->data);
+        if (cur == 0) {
+            return -1; // no directory found
+        }
+        if(lpath->next != 0) {
+            node = get_inode(cur->inode_idx);
+            parent = node->data_blocks[0];
+            lpath = lpath->next;
+        } else {
+            break;
+        }
+    }
+
+    int ret = cur->inode_idx;
+    inode* dir_node = get_inode(cur->inode_idx);
+    if (S_ISREG(dir_node->mode)) {
+        return -1; // path is to file
+    }
+    if (has_permissions(ret, 2) == 0) {
+        return -1; // must have write permissions
+    }
+    directory* dir = dir_node->data_blocks[0];
+    if (dir->entries != 0) {
+        return -1; // dir not empty
+    }
+
+    directory_remove_ent(parent, cur); // remove entry from parent directory entries list
+    free(cur);
+    free(dir);
+
+    return ret;
 }
 
 slist* directory_list(const char* path) {
@@ -69,13 +150,3 @@ void print_directory(directory* dd) {
     //Iterate through the entries printing their info as it goes
 }
 
-dirent* get_dirent(directory* dd, const char* name) {
-    dirent* cur = dd->entries;
-    while(cur != 0) {
-    	if(strcmp(cur->name, name)) {
-    	    return cur;
-    	}
-        cur = cur->next;
-    }
-    return 0;
-}
