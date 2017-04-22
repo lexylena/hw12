@@ -29,6 +29,7 @@ int directory_put_ent(directory dd, const char* name, int idx);
 int directory_delete(directory dd, const char* name);
 slist* directory_list(const char* path);
 void print_directory(directory* dd);
+directory* mkdirectory();
 
 #endif
 
