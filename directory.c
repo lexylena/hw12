@@ -2,13 +2,16 @@
 #include "directory.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 directory* root;
 
 void directory_init() {
     root = (directory*) malloc(sizeof(directory));
     root->entries = 0;
-    root->node = get_inode(0);
+    inode* root_node = make_inode(0, 040755);
+    root_node->data_blocks[0] = (void*) root; // point root node to root directory
+    root->node = root_node; // set root directory's node
 }
 
 directory directory_from_pnum(int pnum) {
@@ -33,7 +36,7 @@ directory directory_from_path(const char* path){
     //Else, recurse this function on that entry with the remaining path
 } 
 
-int directory_put_ent(directory* dd, const char* name, int idx) {
+int directory_put_ent(directory* dd, char* name, int idx) {
     //Create new entry with name "name" and index idx. 
     //Add this entry to the list of entries for directory dd 
     directory* ndir = (directory*) malloc(sizeof(directory));
@@ -69,13 +72,10 @@ void print_directory(directory* dd) {
 dirent* get_dirent(directory* dd, const char* name) {
     dirent* cur = dd->entries;
     while(cur != 0) {
-	if(cur->name == name) {
-	    return cur;
-	} else if (cur->next != 0) {
-	    cur = cur->next;
-	} else {
-	    return 0;
-	}
+    	if(strcmp(cur->name, name)) {
+    	    return cur;
+    	}
+        cur = cur->next;
     }
     return 0;
 }
