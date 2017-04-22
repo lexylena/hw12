@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <assert.h>
+#include <errno.h>
 
 #include "storage.h"
 #include "superblock.h"
@@ -108,6 +109,42 @@ rmdir_help(const char* path)
     }
 
     delete_inode(inode_num);
+    return 0;
+}
+
+int
+rename_help(const char* from, const char* to, int to_exists)
+{
+    dirent* old_entry = find_dirent(from);
+    inode* node = get_inode(old_entry->inode_idx);
+    if (has_permissions(old_entry->inode_idx, 2) == 0) {
+        return -1;
+    }
+
+    if (to_exists) {
+        dirent* new_entry = find_dirent(to);
+        inode* to_node = get_inode(new_entry->inode_idx);
+        if (S_ISREG(node->mode) != S_ISREG(to_node->mode)) {
+            return -1;
+        }
+        if (S_ISDIR(node->mode)) { // renaming directores
+            directory* old_dir = (directory*)node->data_blocks[0];
+            if (get_dirent(old_dir, to) != 0) {
+                return -1;
+            }
+            rmdir_help(to);
+        } else { // renaming files
+            char* to_copy;
+            memcpy(to_copy, to, strlen(to));
+            dirname(to_copy);
+            dirent* pdirent = find_dirent(to_copy);
+            directory* pdir = (directory*)(get_inode(pdirent->inode_idx))->data_blocks[0];
+            directory_remove_ent(pdir, new_entry);
+            delete_inode(new_entry->inode_idx);
+        }
+    }
+    old_entry->name = (char*) to;
+    old_entry->name_len = strlen(to);
     return 0;
 }
 
