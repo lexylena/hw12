@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <assert.h>
 
 directory* root;
 
@@ -37,7 +38,7 @@ find_dirent(const char* path)
     while(lpath != 0) {
         cur = get_dirent(parent, lpath->data);
         if (cur == 0) {
-            return -1; // should be something about wrong dir in path?
+            return 0; // should be something about wrong dir in path?
         }
         if(lpath->next != 0) {
             node = get_inode(cur->inode_idx);
@@ -47,7 +48,7 @@ find_dirent(const char* path)
             return cur;
         }
     }
-    return -1;
+    return 0;
 }
 
 int directory_lookup_idx(directory dd, const char* name) {
@@ -64,7 +65,8 @@ directory directory_from_path(const char* path){
     //Else, recurse this function on that entry with the remaining path
 } 
 
-int directory_put_ent(directory* dd, char* name, int idx) {
+void
+directory_put_ent(directory* dd, char* name, int idx) {
     //Create new entry with name "name" and index idx. 
     //Add this entry to the list of entries for directory dd 
     
@@ -76,12 +78,16 @@ int directory_put_ent(directory* dd, char* name, int idx) {
     dd->entries = ndirent;
 }
 
-int
+directory*
 directory_make(int idx)
 {
     directory* ndir = (directory*) malloc(sizeof(directory));
     ndir->entries = 0;
-    ndir->node = get_inode(idx);
+    inode* node = get_inode(idx);
+    assert(S_ISDIR(node->mode));
+    ndir->node = node;
+    node->data_blocks[0] = (void*)ndir;
+    return ndir;
 }
 
 void

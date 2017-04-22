@@ -46,17 +46,18 @@ storage_init(const char* path)
 int
 get_stat(const char* path, struct stat* st)
 {
-    // need find_dirent function to find a dirent from given path
-    dirent* entry = find_dirent(path);
-    if (entry == 0 || streq(root_path, path) == 0) {
-        return -1;
-    }
-
     inode* node;
-    if (streq(root_path, path)) {
-        node = get_inode(0);
+    int ino;
+    if (streq(root_path, path) == 0) {
+        dirent* entry = find_dirent(path);
+        if (entry == 0) {
+            return -1;
+        }
+        ino = entry->inode_idx;
+        node = get_inode(ino);
     } else {
-        node = get_inode(entry->inode_idx);
+        ino = 0;
+        node = get_inode(0);
     }
 
     memset(st, 0, sizeof(struct stat));
@@ -64,7 +65,7 @@ get_stat(const char* path, struct stat* st)
     st->st_mode = node->mode;
     st->st_size = node->size;
     st->st_nlink = node->links_count;
-    st->st_ino = entry->inode_idx;
+    st->st_ino = ino;
     st->st_atime = node->time.tv_sec;
     st->st_ctime = node->ctime.tv_sec;
     st->st_mtime = node->mtime.tv_sec;
@@ -84,7 +85,7 @@ get_data(const char* path)
 int
 mkdir_help(const char* path, mode_t mode) 
 {
-    if (find_dirent(path) != -1) 
+    if (find_dirent(path) != 0) 
     {
         return -1;
     }
@@ -106,7 +107,7 @@ mkdir_help(const char* path, mode_t mode)
 int 
 mknod_help(const char* path, mode_t mode) 
 {
-    if (find_dirent(path) != -1) 
+    if (find_dirent(path) != 0) 
     {
         return -1;
     }
