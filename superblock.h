@@ -14,12 +14,12 @@ typedef struct superblock {
 	void* data_blocks; // location of first data block
 } superblock;
 
-// TODO: better way to not include superblock as param every time?
 superblock* superblock_init(inode* inodes, void* data_blocks);
 int get_free_inode();
 int get_free_block();
-inode* make_inode(mode_t mode, char* data);
+int write_data(int inode_num, const char* data);
 void delete_inode(int inode_num);
+char* get_data(int inode_num);
 
 
 #endif

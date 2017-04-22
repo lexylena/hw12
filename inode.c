@@ -1,9 +1,9 @@
 
 #define _GNU_SOURCE
 #include <string.h>
-
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <unistd.h>
 #include <assert.h>
 #include <stdio.h>
@@ -37,14 +37,54 @@ inodes_free()
 }
 
 inode*
+make_inode(mode_t mode)
+{
+    int inode_num = get_free_inode();
+    inode* node = get_inode(inode_num);
+    node->mode = (int)mode;
+    node->uid = getuid();
+    node->size = 0;
+
+    struct timespec* ts = malloc(sizeof(struct timespec));
+    clock_gettime(CLOCK_REALTIME, ts);
+    node->ctime.tv_sec = ts->tv_sec;
+    node->ctime.tv_nsec = ts->tv_nsec;
+    node->time.tv_sec = ts->tv_sec;
+    node->time.tv_nsec = ts->tv_nsec;
+    free(ts);
+    //node->mtime isn't set because hasn't been modified yet?
+
+    node->links_count = 1;
+    node->blocks_count = 0;
+
+    if (S_ISREG(mode)) {
+        node->flags = FILE_FLAG;
+    } else {
+        node->flags = DIR_FLAG;
+    }
+
+    return node;
+}
+
+inode*
 get_inode(int inode_num)
 {
     return inodes_base + INODE_SIZE * inode_num;
 }
 
-// change inode->mode
-// return 0 on success
-// return -1 if flags don't match new mode
+int
+get_inode_num(inode* node)
+{
+    uint diff = (uint)node - (uint)inodes_base;
+    assert(diff % INODE_SIZE == 0);
+    return ((uint)node - (uint)inodes_base) / INODE_SIZE;
+}
+
+/* 
+change inode->mode
+return 0 on success
+return -1 if flags don't match new mode
+*/
 int
 change_mode(int inode_num, mode_t mode)
 {

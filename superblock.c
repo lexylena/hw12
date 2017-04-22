@@ -4,7 +4,6 @@
 #include <string.h>
 #include <assert.h>
 #include <unistd.h>
-#include <sys/time.h>
 #include <sys/stat.h>
 #include "superblock.h"
 #include "inode.h"
@@ -49,69 +48,78 @@ get_free_block()
 	return -1; // no free blocks
 }
 
-void
+// returns number of bytes written in overflow blocks
+int
 allocate_overflow_blocks(int inode_num, void* overflow)
 {
 	inode* node = get_inode(inode_num);
 	void** overflow_block = get_block(get_free_block());
 	int overflow_blocks = node->blocks_count - 14;
+    int offset;
 	for (int ii = 0; ii < overflow_blocks; ++ii) {
 		int block_num  = get_free_block();
-        	void* dst = get_block(block_num);
+    	void* dst = get_block(block_num);
+        if (ii == overflow_blocks - 1) { // if last block
+            offset = (int) strlen(overflow + ii * 4096);
+            memcpy(dst, overflow + ii * 4096, offset);
+        } else {
         	memcpy(dst, overflow + ii * 4096, 4096);
-        	*(overflow_block + ii * sizeof(void*)) = dst;
+        }
+        *(overflow_block + ii * sizeof(void*)) = dst;
 	}
 
 	node->data_blocks[14] = overflow_block;
+    if (offset == 0) { // data perfectly takes up x number of blocks
+        offset = overflow_blocks * 4096;
+    } else {
+        offset += (overflow_blocks - 1) * 4096;
+    }
+    return offset;
 }
 
-inode*
-make_inode(mode_t mode, char* data)
+// returns number of bytes written
+int
+write_data(int inode_num, const char* data)
 {
-    int inode_num = get_free_inode();
     inode* node = get_inode(inode_num);
-    node->mode = (int)mode;
-    node->uid = getuid();
+    assert(S_ISREG(node->mode));
+    
+    node->size = (int) strlen(data);
+    node->blocks_count = (int)(node->size / 4096);
+    assert(node->blocks_count * 4096 > node->size);
+    int offset;
 
-    struct timespec* ts = malloc(sizeof(struct timespec));
-    clock_gettime(CLOCK_REALTIME, ts);
-    node->ctime.tv_sec = ts->tv_sec;
-    node->ctime.tv_nsec = ts->tv_nsec;
-    node->time.tv_sec = ts->tv_sec;
-    node->time.tv_nsec = ts->tv_nsec;
-    free(ts);
-    //node->mtime isn't set because hasn't been modified yet?
-
-    node->links_count = 1;
-    if (S_ISREG(mode)) {
-        node->flags = FILE_FLAG;
-
-        node->size = (int) strlen(data);
-        node->blocks_count = (int)(node->size / 4096);
-        assert(node->blocks_count * 4096 > node->size);
-
-        for (int ii = 0; ii < node->blocks_count && ii < 14; ++ii) {
-        	int block_num  = get_free_block();
-            void* dst = get_block(block_num);
+    for (int ii = 0; ii < node->blocks_count && ii < 14; ++ii) {
+        int block_num  = get_free_block();
+        void* dst = get_block(block_num);
+        if (ii == node->blocks_count - 1) { // if last block
+            offset = (int) strlen((char*)((void*)data + ii * 4096));
+            memcpy(dst, (void*)data + ii * 4096, offset);
+        } else {
             memcpy(dst, (void*)data + ii * 4096, 4096);
-            node->data_blocks[ii] = dst;
         }
-
-        // handle data that requires more than 14 blocks
-        if (node->blocks_count > 14) {
-            void* overflow = (void*)data + 14 * 4096;
-            allocate_overflow_blocks(inode_num, overflow);
-        }
-    } else {
-        node->flags = DIR_FLAG;
-        node->data_blocks[0] = make_directory();
-        node->size = 0; // should a directory have a size...? should it be updated as files added to it?
-        node->blocks_count = 0;
+        node->data_blocks[ii] = dst;
     }
 
-    return node;
+    // handle data that requires more than 14 blocks
+    if (node->blocks_count > 14) {
+        void* overflow = (void*)data + 14 * 4096;
+        offset = allocate_overflow_blocks(inode_num, overflow);
+        offset += 14 * 4096;
+    } else {
+        if (offset == 0) { // data perfectly takes up < 14 blocks
+            offset = node->blocks_count * 4096;
+        } else {
+            offset += (node->blocks_count - 1) * 4096;
+        }
+    }
+
+    assert(offset == node->size);
+    // TODO: update timestamps
+    return offset;
 }
 
+// deletes inode and all of its data blocks
 void
 delete_inode(int inode_num)
 {
@@ -127,7 +135,7 @@ delete_inode(int inode_num)
         sb->blocks_bitmap[block_num] = 0;
     }
 
-    // direct data blocks of indirect pointer
+    // data blocks of indirect pointer
     void** overflow_blocks = (void**)node->blocks[14];
     if (overflow) {
         for (int ii = 0; ii < node->blocks_count - 14; ++ii) {
@@ -143,28 +151,39 @@ delete_inode(int inode_num)
 }
 
 char*
-get_data(int inode_num, int bytes)
+get_data(int inode_num)
 {
-    char* buf = malloc(bytes);
     inode* node = get_inode(inode_num);
+    void* buf = malloc(node->size);
+    void* block;
+    int offset;
 
     for (int ii = 0; ii < node->blocks_count && ii < 14; ++ii) {
         block = node->data_blocks[ii];
-        memset(block, 0, 4096);
-        block_num = get_block_num(block);
-        sb->blocks_bitmap[block_num] = 0;
+        if (ii == node->blocks_count - 1) { // if last block
+            offset = (int) strlen(block);
+            memcpy(buf + ii * 4096, block, offset);
+        } else {
+            memcpy(buf + ii * 4096, block, 4096);
+        }
     }
 
-    // direct data blocks of indirect pointer
+    // get data blocks of indirect pointer
     void** overflow_blocks = (void**)node->blocks[14];
     if (overflow) {
         for (int ii = 0; ii < node->blocks_count - 14; ++ii) {
             block = *(overflow_blocks + ii * sizeof(void*));
-            memset(block, 0, 4096);
-            block_num = get_block_num(block);
-            sb->blocks_bitmap[block_num] = 0;
+            if (ii == node->blocks_count - 15) { // if last block
+                offset = (int) strlen(block);
+                memcpy(buf + 14 * 4096 + ii * 4096, block, offset);
+            } else {
+                memcpy(buf + 14 * 4096 + ii * 4096, block, 4096);
+            }
         }
     }
 
+    offset += (node->blocks->count - 1) * 4096;
+    assert(offset == node->size);
+    return (char*)buf;
     
 }
