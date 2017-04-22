@@ -197,5 +197,20 @@ utimens_help(const char* path, const struct timespec ts[2])
     return 0;
 }
 
+int
+access_help(const char* path, int mask) 
+{
+    if(find_dirent(path) == 0) {
+	return -1;
+    }
+    dirent* entry = find_dirent(path);
+    inode* enode = get_inode(entry->inode_idx);
+    if(enode->mode == mask) {
+	return 0;
+    } else {
+	return -1;
+    }
+}
+
 
     
