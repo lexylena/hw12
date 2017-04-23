@@ -254,4 +254,9 @@ unlink_help(const char* path)
     return 0;
 }
 
+slist*
+dir_list_help(const char* path) {
+    return directory_list(path);
+}
+
     

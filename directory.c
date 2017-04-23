@@ -155,6 +155,22 @@ slist* directory_list(const char* path) {
     //Maybe return the entries in the directory given by the path?
     //If so, recurse like in directory_from_path
     //return the dirent* of the last directory
+    dirent* pdir = find_dirent(path);
+    inode* pnode = get_inode(pdir->inode_idx);
+    directory* parent = node->data_blocks[0];
+    dirent* cur = parent->entries;
+    slist* dirlist = malloc(sizeof(slist));
+    dirlist->data = ".";
+    dirlist->next = 0;
+    while(cur != 0) {
+	dirlist = s_cons(cur->name, dirlist);
+        if(cur->next != 0) {
+	    cur = cur->next;
+        } else {
+	    break;
+	}
+    }
+    return dirlist;
 }
 
 void print_directory(directory* dd) {
