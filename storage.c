@@ -236,7 +236,6 @@ unlink_help(const char* path)
 
     int ret = cur->inode_idx;
     inode* dir_node = get_inode(cur->inode_idx);
-    inode* dir_node = get_inode(dir->inode_idx);
     if (!(S_ISREG(dir_node->mode))) {
         return -1; // path is not to file
     }
