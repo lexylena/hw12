@@ -95,8 +95,9 @@ directory_put_ent(directory* dd, char* name, int idx) {
     ndirent->name = name;
     ndirent->name_len = strlen(name);
     ndirent->inode_idx = idx;
-    ndirent->next = dd->entries;
-    dd->entries = ndirent;
+    dirent** pent = (dirent**)dd->entries; 
+    ndirent->next = *pent;
+    *pent = ndirent;
     return ndirent;
 }
 
