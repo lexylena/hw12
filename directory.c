@@ -180,7 +180,7 @@ slist* directory_list(const char* path) {
     //return the dirent* of the last directory
     dirent* pdir = find_dirent(path);
     inode* pnode = get_inode(pdir->inode_idx);
-    directory* parent = node->data_blocks[0];
+    directory* parent = pnode->data_blocks[0];
     dirent* cur = parent->entries;
     slist* dirlist = malloc(sizeof(slist));
     dirlist->data = ".";
