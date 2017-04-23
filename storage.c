@@ -89,18 +89,26 @@ mkdir_help(const char* path, mode_t mode)
     {
         return -1;
     }
-    char* name;
-    char* dir;
     size_t len = strlen(path);
-    memcpy(name, path, len);
-    memcpy(dir, path, len);
+    char* path_copy = malloc(len);
+    memcpy(path_copy, path, len);
+    char* dir = dirname(path_copy);
     int idx = get_free_inode();
+    mode = 040000 + mode;
     inode* node = make_inode(idx, mode);
-    dirent* pdirent = find_dirent(dirname(dir));
-    inode* pnode = get_inode(pdirent->inode_idx);
+    dirent* pdirent = find_dirent(dir);
+    inode* pnode;
+    if (pdirent == 0) {
+        pnode = get_inode(0);
+    } else {
+        pnode = get_inode(pdirent->inode_idx);
+    }
     directory* pdir = pnode->data_blocks[0];
     directory_make(idx);
-    directory_put_ent(pdir, basename(name), idx);
+    dirent* d = directory_put_ent(pdir, basename(path), idx);
+    assert(d != 0);
+    printf("new entry->name = %s, len = %i\n", d->name, (int)strlen(d->name));
+    // assert(find_dirent(path) != 0); // should have been created
     return 0;
 }
 
@@ -111,17 +119,27 @@ mknod_help(const char* path, mode_t mode)
     {
         return -1;
     }
-    char* name;
-    char* dir;
     size_t len = strlen(path);
-    memcpy(name, path, len);
-    memcpy(dir, path, len);
+    char* path_copy = malloc(len);
+    memcpy(path_copy, path, len);
+    char* dir = dirname(path_copy);
+    // printf("dirname = %s\n", dir);
     int idx = get_free_inode();
     inode* node = make_inode(idx, mode);
-    dirent* pdirent = find_dirent(dirname(dir));
-    inode* pnode = get_inode(pdirent->inode_idx);
+    dirent* pdirent = find_dirent(dir);
+    inode* pnode;
+    if (pdirent == 0) { // root
+        pnode = get_inode(0);
+    } else {
+        pnode = get_inode(pdirent->inode_idx);
+    }
     directory* pdir = pnode->data_blocks[0];
-    directory_put_ent(pdir, basename(name), idx);
+    // printf("path now %s\n", path);
+    dirent* d = directory_put_ent(pdir, basename(path), idx);
+    // printf("new entry->name = %s, len = %i\n", d->name, (int)strlen(d->name));
+    // assert(d != 0);
+    // assert(find_dirent("/iguana.txt") != 0);
+
     return 0;
 }    
 
@@ -159,7 +177,7 @@ rename_help(const char* from, const char* to, int to_exists)
             }
             rmdir_help(to);
         } else { // renaming files
-            char* to_copy;
+            char* to_copy = malloc(strlen(to));
             memcpy(to_copy, to, strlen(to));
             dirname(to_copy);
             dirent* pdirent = find_dirent(to_copy);
@@ -186,12 +204,13 @@ write_help(const char* path, const char* buf, size_t size, off_t offset)
     dirent* entry = find_dirent(path);
     int ret = write_data(entry->inode_idx, buf, size, offset);
     assert(ret == size + offset);
-    return 0;
+    return ret;
 }
 
 int
 utimens_help(const char* path, const struct timespec ts[2])
 {
+    printf("in utimens help\n");
     dirent* entry = find_dirent(path);
     update_timestamps(entry->inode_idx, ts);
     return 0;
@@ -254,9 +273,25 @@ unlink_help(const char* path)
     return 0;
 }
 
+<<<<<<< HEAD
 slist*
 dir_list_help(const char* path) {
     return directory_list(path);
 }
 
     
+=======
+int
+open_help(const char* path)
+{
+    dirent* entry = find_dirent(path);
+    if (entry == 0) {
+        return -1;
+    }
+
+    if (has_permissions(entry->inode_idx, 4)) {
+        return 0;
+    }
+    return -1;
+}
+>>>>>>> origin/master

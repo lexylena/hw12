@@ -215,7 +215,7 @@ int
 nufs_open(const char *path, struct fuse_file_info *fi)
 {
     printf("open(%s)\n", path);
-    return 0;
+    return open_help(path);
 }
 
 // Actually read data
@@ -248,8 +248,7 @@ int
 nufs_write(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi)
 {
     printf("write(%s, %ld bytes, @%ld)\n", path, size, offset);
-    write_help(path, buf, size, offset);
-    return 0;
+    return write_help(path, buf, size, offset);
 }
 
 int

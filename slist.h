@@ -7,6 +7,7 @@ typedef struct slist {
     struct slist* next;
 } slist;
 
+void print_slist(slist* list);
 slist* s_cons(const char* text, slist* rest);
 void   s_free(slist* xs);
 slist* s_split(const char* text, char delim);

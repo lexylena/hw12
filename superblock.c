@@ -93,8 +93,8 @@ write_data(int inode_num, const char* data, size_t size, off_t offset)
     }
     int ret;
     node->size += size; // update size
-    node->blocks_count += (int) (size / 4096); // update blocks_count
-    int beginning_block = (int) (offset / 4096) - 1;
+    node->blocks_count += (int) (size / 4096) + 1; // update blocks_count
+    int beginning_block = (int) (offset / 4096);
 
     if (beginning_block < 14) {
         for (int ii = beginning_block; ii < node->blocks_count && ii < 14; ++ii) {
@@ -105,8 +105,13 @@ write_data(int inode_num, const char* data, size_t size, off_t offset)
             }
 
             if (ii == beginning_block) { // if first block
-                memcpy(dst + offset % 4096, (void*)data, 4096 - (offset % 4096));
-                offset += (4096 - (offset % 4096));
+                if (size >= 4096) {
+                    memcpy(dst + offset % 4096, (void*)data, 4096 - (offset % 4096));
+                    offset += (4096 - (offset % 4096));
+                } else {
+                    memcpy(dst + offset % 4096, (void*)data, size % 4096);
+                    offset += size % 4096;
+                }
             } else if (ii == node->blocks_count - 1) { // if last block
                 memcpy(dst, (void*)data + ii * 4096, size % 4096);
                 offset += size % 4096;
@@ -197,9 +202,6 @@ read_data(int inode_num)
             }
         }
     }
-
-    offset += (node->blocks_count - 1) * 4096;
-    assert(offset == node->size);
     return (char*)buf;
     
 }

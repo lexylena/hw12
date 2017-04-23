@@ -26,7 +26,7 @@ directory directory_from_pnum(int pnum);
 int directory_lookup_idx(directory dd, const char* name);
 int tree_lookup_pnum(const char* path);
 directory directory_from_path(const char* path);
-void directory_put_ent(directory* dd, char* name, int idx);
+dirent* directory_put_ent(directory* dd, char* name, int idx);
 directory* directory_make(int idx);
 void directory_remove_ent(directory* parent, dirent* entry);
 int directory_delete(const char* path);
