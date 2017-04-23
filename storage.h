@@ -16,6 +16,7 @@ int chmod_help(const char* path, mode_t mode);
 int write_help(const char* path, const char* buf, size_t size, off_t offset);
 int utimens_help(const char* path, const struct timespec ts[2]);
 int access_help(const char* path, int mask);
-int unlink_help(path);
+int unlink_help(const char* path);
+int open_help(const char* path);
 
 #endif

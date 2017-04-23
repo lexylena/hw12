@@ -5,6 +5,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <assert.h>
+#include "util.h"
 
 directory* root;
 
@@ -19,12 +20,26 @@ void directory_init() {
 dirent* get_dirent(directory* dd, const char* name) {
     dirent* cur = dd->entries;
     while(cur != 0) {
-        if(strcmp(cur->name, name)) {
+        if (cur == 0) { printf("cur is somehow 0...\n");}
+        printf("cur*: %s, name: %s\n", *cur, name);
+        if(streq(cur->name, name)) {
             return cur;
         }
         cur = cur->next;
     }
     return 0;
+}
+
+void
+print_dirents(directory* dd)
+{
+    dirent* cur = dd->entries;
+    printf("entries: [");
+    while (cur != 0) {
+        printf("%s ", cur->name);
+        cur = cur->next;
+    }
+    printf(" ]\n");
 }
 
 
@@ -35,19 +50,25 @@ find_dirent(const char* path)
     inode* node = get_inode(0);
     directory* parent = node->data_blocks[0];
     dirent* cur = 0;
+    lpath = lpath->next;
+    // print_slist(lpath);
     while(lpath != 0) {
-        cur = get_dirent(parent, lpath->data);
-        if (cur == 0) {
-            return 0; // should be something about wrong dir in path?
+        // printf("lpath->data = %s", lpath->data);
+            cur = get_dirent(parent, lpath->data);
+            if (cur == 0) {
+                printf("find_dirent: path (%s) not found in directory\n", lpath->data);
+                return 0; // should be something about wrong dir in path?
+            }
+            if(lpath->next != 0) {
+                node = get_inode(cur->inode_idx);
+                parent = node->data_blocks[0];
+                lpath = lpath->next;
+            } else {
+                // printf("found dirent %s\n", cur->name);
+                return cur;
+            }
         }
-        if(lpath->next != 0) {
-            node = get_inode(cur->inode_idx);
-            parent = node->data_blocks[0];
-            lpath = lpath->next;
-        } else {
-            return cur;
-        }
-    }
+    
     return 0;
 }
 
@@ -65,17 +86,18 @@ directory directory_from_path(const char* path){
     //Else, recurse this function on that entry with the remaining path
 } 
 
-void
+dirent*
 directory_put_ent(directory* dd, char* name, int idx) {
     //Create new entry with name "name" and index idx. 
     //Add this entry to the list of entries for directory dd 
-    
+    printf("directory_put_ent name = %s\n", name);
     dirent* ndirent = (dirent*) malloc(sizeof(dirent));
     ndirent->name = name;
     ndirent->name_len = strlen(name);
     ndirent->inode_idx = idx;
     ndirent->next = dd->entries;
     dd->entries = ndirent;
+    return ndirent;
 }
 
 directory*
@@ -95,7 +117,7 @@ directory_remove_ent(directory* parent, dirent* entry)
 {
     dirent* cur = parent->entries;
     while (cur != 0 && cur->next != 0) {
-        if (strcmp(cur->next->name, entry->name)) {
+        if (streq(cur->next->name, entry->name)) {
             cur->next = entry->next;
             return;
         }
