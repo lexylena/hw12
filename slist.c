@@ -1,8 +1,33 @@
 #include <string.h>
 #include <stdlib.h>
 #include <alloca.h>
+#include <stdio.h>
 
 #include "slist.h"
+
+int
+slist_len(slist* list)
+{
+    slist* cur = list;
+    int count = 0;
+    while (cur != 0) {
+        count += 1;
+        cur = cur->next;
+    }
+    return count;
+}
+
+void
+print_slist(slist* list)
+{
+    slist* cur = list;
+    printf("list len %i: [", slist_len(list));
+    while (cur != 0) {
+        printf("%s  ", cur->data);
+        cur = cur->next;
+    }
+    printf("]\n");
+}
 
 slist*
 s_cons(const char* text, slist* rest)

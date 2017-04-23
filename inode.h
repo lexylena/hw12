@@ -6,7 +6,7 @@
 #include <sys/types.h>
 
 typedef struct inode {
-    int mode; // permission & type
+    mode_t mode; // permission & type
     uid_t uid; // user id of the file owner
     int size; // bytes for file
     struct timespec time; // last accessed time
@@ -23,7 +23,6 @@ inode* inodes_init();
 void inodes_free();
 inode* make_inode(int inode_num, mode_t mode);
 inode* get_inode(int inode_num);
-int get_inode_num(inode* node);
 int change_mode(int inode_num, mode_t mode);
 int update_timestamps(int inode_num, const struct timespec ts[2]);
 int has_permissions(int inode_num, int permissions);

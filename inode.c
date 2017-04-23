@@ -42,7 +42,7 @@ inode*
 make_inode(int inode_num, mode_t mode)
 {
     inode* node = get_inode(inode_num);
-    node->mode = (int)mode;
+    node->mode = mode;
     node->uid = getuid();
     node->size = 0;
 
@@ -71,14 +71,6 @@ inode*
 get_inode(int inode_num)
 {
     return inodes_base + INODE_SIZE * inode_num;
-}
-
-int
-get_inode_num(inode* node)
-{
-    int64_t diff = (int64_t)node - (int64_t)inodes_base;
-    assert(diff % INODE_SIZE == 0);
-    return (int) diff / INODE_SIZE;
 }
 
 /* 
