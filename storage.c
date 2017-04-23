@@ -273,14 +273,12 @@ unlink_help(const char* path)
     return 0;
 }
 
-<<<<<<< HEAD
 slist*
 dir_list_help(const char* path) {
     return directory_list(path);
 }
 
-    
-=======
+
 int
 open_help(const char* path)
 {
@@ -294,4 +292,4 @@ open_help(const char* path)
     }
     return -1;
 }
->>>>>>> origin/master
+
